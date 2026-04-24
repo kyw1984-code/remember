@@ -18,7 +18,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSUserTrackingUsageDescription": "맞춤형 광고 제공을 위해 광고 식별자를 사용합니다. 거부해도 앱의 모든 기능을 이용할 수 있습니다."
-      }
+      },
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,7 +28,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.cykintel.remember"
+      "package": "com.cykintel.remember",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -42,3 +42,7 @@ google-play-key.json
 # generated native folders
 /ios
 /android
+secrets/
+*.ipa
+*.aab
+fastlane/report.xml

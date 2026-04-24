@@ -1,16 +1,69 @@
+# Workaround: new apps have no AppStoreReviewDetail yet → fetch returns "No data"
+require 'deliver'
+module DeliverReviewDetailPatch
+  def review_attachment_file(version)
+    super
+  rescue RuntimeError => e
+    raise unless e.message.include?("No data")
+  end
+end
+Deliver::UploadMetadata.prepend(DeliverReviewDetailPatch)
+
 default_platform(:ios)
 
 platform :ios do
-  desc "TestFlight 업로드 (심사 제출 없음)"
-  lane :beta do
+  desc "App Store Connect에 앱 등록 (최초 1회)"
+  lane :create_app do
     api_key = app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
       key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
     )
+    produce(
+      app_identifier: "com.cykintel.remember",
+      app_name: "외워줘",
+      language: "ko",
+      app_version: "1.0.0",
+      sku: "com.cykintel.remember",
+      team_id: ENV["TEAM_ID"],
+      itc_team_id: ENV["ITC_TEAM_ID"],
+      skip_devcenter: true
+    )
+  end
+
+  desc "TestFlight 업로드 (심사 제출 없음)"
+  lane :beta do |options|
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+    ipa_path = options[:ipa] || Dir.glob("build-*.ipa").max_by { |f| File.mtime(f) }
     upload_to_testflight(
       api_key: api_key,
+      ipa: ipa_path,
       skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "스크린샷만 업로드"
+  lane :upload_screenshots do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+    deliver(
+      api_key: api_key,
+      submit_for_review: false,
+      force: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      run_precheck_before_submit: false,
+      screenshots_path: "./fastlane/screenshots",
+      metadata_path: "./fastlane/metadata/ios",
+      overwrite_screenshots: true,
+      verbose: true
     )
   end
 
@@ -25,18 +78,27 @@ platform :ios do
       api_key: api_key,
       submit_for_review: false,
       force: true,
-      skip_screenshots: true,
-      metadata_path: "./fastlane/metadata/ios"
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      overwrite_screenshots: true,
+      run_precheck_before_submit: false,
+      metadata_path: "./fastlane/metadata/ios",
+      screenshots_path: "./fastlane/screenshots",
+      submission_information: {
+        add_id_info_uses_idfa: false
+      }
     )
   end
 end
 
 platform :android do
-  desc "Play Store 메타데이터 + AAB 업로드 (Draft 상태)"
+  desc "Play Store AAB 업로드 (내부 트랙 Draft)"
   lane :prepare_release do
+    aab_path = Dir.glob("build-*.aab").max_by { |f| File.mtime(f) }
     supply(
       package_name: "com.cykintel.remember",
       json_key: ENV["GOOGLE_PLAY_JSON_KEY_FILE"],
+      aab: aab_path,
       track: "internal",
       release_status: "draft",
       metadata_path: "./fastlane/metadata/android"
