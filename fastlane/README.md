@@ -15,6 +15,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 ## iOS
 
+### ios fix_privacy
+
+```sh
+[bundle exec] fastlane ios fix_privacy
+```
+
+앱 개인정보 추적 설정 수정 (추적 없음으로 변경)
+
 ### ios create_app
 
 ```sh

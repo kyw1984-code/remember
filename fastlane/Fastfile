@@ -12,6 +12,34 @@ Deliver::UploadMetadata.prepend(DeliverReviewDetailPatch)
 default_platform(:ios)
 
 platform :ios do
+  desc "앱 개인정보 추적 설정 수정 (추적 없음으로 변경)"
+  lane :fix_privacy do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_ISSUER_ID"],
+      key_filepath: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+    app_id = "6763474658"
+
+    # 현재 데이터 사용 항목 조회
+    client = Spaceship::ConnectAPI
+    usages = client.get_app_data_usages(app_id: app_id)
+    UI.message("현재 데이터 사용 항목: #{usages.count}개")
+
+    usages.each do |usage|
+      UI.message("삭제 중: #{usage.id}")
+      client.delete_app_data_usage(app_data_usage_id: usage.id)
+    end
+
+    # 가용 카테고리/목적 조회
+    categories = client.get_app_data_usage_categories
+    purposes = client.get_app_data_usage_purposes
+    protections = client.get_app_data_usage_data_protections rescue []
+
+    UI.message("Categories: #{categories.map { |c| "#{c.id}: #{c.attributes}" }}")
+    UI.message("Purposes: #{purposes.map { |p| "#{p.id}: #{p.attributes}" }}")
+  end
+
   desc "App Store Connect에 앱 등록 (최초 1회)"
   lane :create_app do
     api_key = app_store_connect_api_key(
