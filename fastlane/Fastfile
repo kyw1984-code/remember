@@ -128,13 +128,14 @@ platform :android do
     UI.message("이후 fastlane android prepare_release 를 사용할 수 있습니다.")
   end
 
-  desc "메타데이터만 업로드 (바이너리 없음)"
+  desc "메타데이터만 업로드 (바이너리 없음, 변경 로그 건너뜀)"
   lane :upload_metadata do
     supply(
       package_name: "com.cykintel.remember",
       json_key: ENV["GOOGLE_PLAY_JSON_KEY_FILE"],
       skip_upload_apk: true,
       skip_upload_aab: true,
+      skip_upload_changelogs: true,
       skip_upload_images: false,
       skip_upload_screenshots: false,
       metadata_path: "./fastlane/metadata/android"
