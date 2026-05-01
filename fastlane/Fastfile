@@ -120,9 +120,31 @@ platform :ios do
 end
 
 platform :android do
-  desc "Play Store AAB 업로드 (내부 트랙 Draft)"
-  lane :prepare_release do
-    aab_path = Dir.glob("build-*.aab").max_by { |f| File.mtime(f) }
+  desc "Google Play에 앱 등록 (최초 1회 — AAB 직접 업로드 후 콘솔에서 앱 생성 필요)"
+  lane :create_app do
+    UI.message("Google Play는 API로 신규 앱 생성을 지원하지 않습니다.")
+    UI.message("Play Console(https://play.google.com/console)에서 수동으로 앱을 생성한 뒤,")
+    UI.message("첫 AAB를 내부 테스트 트랙에 직접 업로드해 앱을 활성화하세요.")
+    UI.message("이후 fastlane android prepare_release 를 사용할 수 있습니다.")
+  end
+
+  desc "메타데이터만 업로드 (바이너리 없음)"
+  lane :upload_metadata do
+    supply(
+      package_name: "com.cykintel.remember",
+      json_key: ENV["GOOGLE_PLAY_JSON_KEY_FILE"],
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: false,
+      skip_upload_screenshots: false,
+      metadata_path: "./fastlane/metadata/android"
+    )
+  end
+
+  desc "Play Store AAB 업로드 (내부 트랙 Draft, 심사 제출 없음)"
+  lane :prepare_release do |options|
+    aab_path = options[:aab] || Dir.glob("*.aab").max_by { |f| File.mtime(f) }
+    UI.user_error!("AAB 파일을 찾을 수 없습니다. aab: 옵션으로 경로를 지정하세요.") unless aab_path && File.exist?(aab_path.to_s)
     supply(
       package_name: "com.cykintel.remember",
       json_key: ENV["GOOGLE_PLAY_JSON_KEY_FILE"],

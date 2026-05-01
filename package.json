@@ -10,7 +10,12 @@
     "build:preview:android": "eas build --profile preview --platform android --local",
     "build:preview:ios": "eas build --profile preview --platform ios --local",
     "build:prod:android": "eas build --profile production --platform android --local",
-    "build:prod:ios": "eas build --profile production --platform ios --local"
+    "build:prod:ios": "eas build --profile production --platform ios --local",
+    "release:prepare:android": "fastlane android prepare_release",
+    "release:prepare:ios": "fastlane ios prepare_release",
+    "release:prepare:all": "fastlane ios prepare_release && fastlane android prepare_release",
+    "release:metadata:android": "fastlane android upload_metadata",
+    "release:testflight": "fastlane ios beta"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
